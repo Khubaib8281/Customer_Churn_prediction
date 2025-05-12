@@ -1,10 +1,15 @@
 import streamlit as st
 import pandas as pd
 import pickle
+import matplotlib.pyplot as plt
+import seaborn as sns   
+import numpy as np
+from PIL import Image
 
 # Load the trained model
 with open("model_xg.pkl", "rb") as f:
     model = pickle.load(f)
+df = pd.read_csv("df_for_heatmap.csv")  # Update with your file path
 
 st.title("📊 Customer Churn Prediction Dashboard")
 
@@ -114,6 +119,23 @@ st.write("### 📋 Input Data")
 st.dataframe(input_df)
 
 # Prediction
-if st.button("Predict Churn"):
+if st.button("Predict Churn"): 
     prediction = model.predict(input_df)[0]
+    probability = model.predict_proba(input_df)[0][1]
     st.success(f"🎯 Prediction: {'Churn' if prediction == 1 else 'No Churn'}")
+    st.success(f"🎯 Probability of Churn: {probability*100:.2f}%")
+
+st.title("Customer Churn Analysis")
+st.markdown("### 📊 Data Visualization")
+fig, axes = plt.subplots(1, 2, figsize=(30, 12))
+sns.countplot(x='churn', data=df, hue = 'churn', ax=axes[0])
+axes[0].set_title('Churn Count')
+
+sns.heatmap(df.corr(numeric_only=True), annot=True, cmap='coolwarm', ax=axes[1])
+axes[0].set_title('Correlation Heatmap')
+
+image = Image.open('feature_imp.jpg')
+st.image(image, caption='Feature Importance', use_container_width=True)
+
+plt.tight_layout()
+st.pyplot(fig)
